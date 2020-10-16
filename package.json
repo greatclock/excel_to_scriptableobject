@@ -1,0 +1,20 @@
+{
+  "displayName": "Excel To ScriptableObject",
+  "name": "com.greatclock.exceltoscriptableobject",
+  "version": "1.0.0",
+  "unity": "2018.4",
+  "description": "An easy way to access datas defined in xlsx files.",
+  "type": "library",
+  "keywords": [
+    "excel",
+    "scriptableobject"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/greatclock/excel_to_scriptableobject.git"
+  },
+  "author": {
+    "name": "greatclock",
+    "email": "thegreatclock@gmail.com"
+  }
+}
