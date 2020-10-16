@@ -262,15 +262,15 @@ Value Example :
 
 ## FAQs
 
-**Q: **How to deal with the compile error because of duplicated Excel.dll, ICSharpCode.SharpZipLib.dll or System.Data.dll when this plugin-tool is imported.
+**Q:** How to deal with the compile error because of duplicated Excel.dll, ICSharpCode.SharpZipLib.dll or System.Data.dll when this plugin-tool is imported.
 
-**A: **All the three dynamic link libraries are common libraries. If duplicated dll importing occurred, keep only one of the same dlls in your project will make it work. All the three dlls used by this plugin-tool are only used in Unity Editor. Take care of dll import settings when necessary.
+**A:** All the three dynamic link libraries are common libraries. If duplicated dll importing occurred, keep only one of the same dlls in your project will make it work. All the three dlls used by this plugin-tool are only used in Unity Editor. Take care of dll import settings when necessary.
 
 ------
 
-**Q: **How to deal with compile errors after clicking "Process Excel" ?
+**Q:** How to deal with compile errors after clicking "Process Excel" ?
 
-**A: **To make sure the data asset file is accurate, "Process Excel" should execute again after compile errors are resolved. Any of the following conditions may bring a compile error:
+**A:** To make sure the data asset file is accurate, "Process Excel" should execute again after compile errors are resolved. Any of the following conditions may bring a compile error:
 
 - Unqualified xlsx file name, sheet name or field name. Fix : Make the name C-Sharp qualified to class name or field name. Remember to remove deprecated previous generated C-Sharp code and asset file.
 - Some code in your project is referencing a field that has been renamed or removed in xlsx file. Fix : the previous field is no longer available. You should modify your logic in your code that referencing the deprecated field.
@@ -279,12 +279,12 @@ Value Example :
 
 ------
 
-**Q: **When using multi-language or rich-text, their values are not reset after calling Reset() method of data asset containing the data item.
+**Q:** When using multi-language or rich-text, their values are not reset after calling Reset() method of data asset containing the data item.
 
-**A: **The real values of multi-language or rich-text field are set only when the data item is retrieved. This is designed to avoid mass data process when there are massive data items. It's recommended NOT to keep the data item for long time. Retrieving data item again after Reset() is called is also a good choice.
+**A:** The real values of multi-language or rich-text field are set only when the data item is retrieved. This is designed to avoid mass data process when there are massive data items. It's recommended NOT to keep the data item for long time. Retrieving data item again after Reset() is called is also a good choice.
 
 ------
 
-**Q: **My Data types are nested, and the field type referencing another type is not mark as an array. But why the field is an array in generated C-Sharp code?
+**Q:** My Data types are nested, and the field type referencing another type is not mark as an array. But why the field is an array in generated C-Sharp code?
 
-**A: **When data types are nested, either the field type is marked as array or the referenced data type is key-to-multi-values will make the field referencing another type be an array.
+**A:** When data types are nested, either the field type is marked as array or the referenced data type is key-to-multi-values will make the field referencing another type be an array.
