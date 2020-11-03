@@ -81,6 +81,7 @@ namespace GreatClock.Common.ExcelToSO {
 				SheetData sheet = new SheetData();
 				sheet.table = table;
 				if (table.Rows.Count < Mathf.Max(global_configs.field_row, global_configs.type_row) + 1) {
+					EditorUtility.ClearProgressBar();
 					string msg = string.Format("Fail to parse '{0}'. The excel file should contains at least 2 lines that specify the column names and their types...", excel.excel_name);
 					EditorUtility.DisplayDialog("Excel To ScriptableObject", msg, "OK");
 					return false;
@@ -104,12 +105,13 @@ namespace GreatClock.Common.ExcelToSO {
 						if (sheet.itemClassName.StartsWith(".")) {
 							sheet.internalData = true;
 							sheet.itemClassName = sheet.itemClassName.Substring(1, sheet.itemClassName.Length - 1).Trim();
-							flag = true;
+							flag = false;
 						}
 					}
 					if (flag) { break; }
 				}
 				if (!CheckClassName(sheet.itemClassName)) {
+					EditorUtility.ClearProgressBar();
 					string msg = string.Format("Invalid sheet name '{0}', because the name of the sheet should be a class name...", sheet.itemClassName);
 					EditorUtility.DisplayDialog("Excel To ScriptableObject", msg, "OK");
 					return false;
@@ -120,6 +122,7 @@ namespace GreatClock.Common.ExcelToSO {
 					string fieldName = items[i].ToString().Trim();
 					if (string.IsNullOrEmpty(fieldName)) { break; }
 					if (!CheckFieldName(fieldName)) {
+						EditorUtility.ClearProgressBar();
 						string msg = string.Format("Fail to parse '{0}' because of invalid field name '{1}'...", excel.excel_name, fieldName);
 						EditorUtility.DisplayDialog("Excel To ScriptableObject", msg, "OK");
 						return false;
@@ -130,6 +133,7 @@ namespace GreatClock.Common.ExcelToSO {
 					sheet.fields.Add(field);
 				}
 				if (sheet.fields.Count <= 0) {
+					EditorUtility.ClearProgressBar();
 					string msg = string.Format("Fail to parse '{0}' because of no appropriate field names...", excel.excel_name);
 					EditorUtility.DisplayDialog("Excel To ScriptableObject", msg, "OK");
 					return false;
