@@ -34,6 +34,8 @@ NO EXTRA API AT ALL. All you need to use will be in the generated codes。
 
 ## Work with It
 
+[Guiding in Progress](./Guide/Guide0_EN.md)
+
 1. Modify and check global configuration. Open "GreatClock->Excel2ScriptableObject" in menu bar to open management window to do this.
 2. Create a xlsx file and fill the field types, field names and datas in sheets that you need.
 3. Modify sheets and datas in xlsx anytime you need.

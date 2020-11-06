@@ -34,6 +34,8 @@
 
 ## 操作步骤
 
+[使用示例](./Guide/Guide0_CN.md)
+
 1. 制定、检查全局设置，在Unity菜单栏中点击GreatClock->Excel2ScriptableObject，打开管理窗口进行操作。
 2. 创建Excel（.xlsx）文件并根据需求定制sheet及其中的字段名称和类型。
 3. 填充或修改表中的数据。
