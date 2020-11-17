@@ -14,7 +14,7 @@ NO EXTRA API AT ALL. All you need to use will be in the generated codes。
 
 1. A C-Sharp code will be generated in specific folder, the same file name with xlsx. All the data types in its sheets will be included, with the class names as sheets' names in xlsx file. The C-Sharp code is used for serializing and retrieving datas.
 2. After compiling generated code, All the datas in sheets will be saved in a Unity asset in specific folder with the same file name with xlsx.
-3. Before writing datas in asset file, datas in each sheets will be sorted, in order to make binary search avaliable.
+3. Before writing datas in asset file, datas in each sheets will be sorted, in order to make binary search available.
 
 
 
@@ -42,7 +42,7 @@ NO EXTRA API AT ALL. All you need to use will be in the generated codes。
 4. Go back to Unity，Open "GreatClock->Excel2ScriptableObject" in menu bar to open management window.
 5. When adding new xlsx file, click "Add New Excel" or "Insert" to create new item. Then click "Select" to choose xlsx file to add. Specify which folders that generated C-Sharp code and asset file stores. Modify its name space, and other features.
 6. Click "Process Excel" or "Process All" to generate or update C-Sharp code and write datas to serialized unity asset file for specific xlsx file(s) managed in management window.
-7. Load data asset file just as loading other assets such as prefab, AudioClip, AnimationClip etc. You can drag data asset file to serialized field in Monobehaviour, or load it by Resources.Load / AssetBundle。
+7. Load data asset file just as loading other assets such as prefab, AudioClip, AnimationClip etc. You can drag data asset file to serialized field in MonoBehaviour, or load it by Resources.Load / AssetBundle。
 8. Get the instance with the data type of the same name with xlsx file from loaded asset.
 9. Call specific Get Method with id or key to retrieve data item(s) of specific sheet.
 10. Debug.Log data item, or read the values of the instance by reading its properties.
@@ -151,7 +151,7 @@ Identifier : vector4
 Value Example : 
 
 - x,y,z,w (format, NOT recommended)
-- [x,y,z,w] (format, NOT recommended)
+- [x,y,z,w] (format, recommended)
 
 ### Rectangle
 
@@ -237,7 +237,7 @@ Value Example :
 - rich_key1,rich_key2,rich_key3
 - [rich_key1,rich_key2,rich_key3]
 
-**NOTE : **
+**NOTE :**
 
 - All identifiers representing array are in format types, type[] or [type].
 - A comma is used to separate elements when necessary.

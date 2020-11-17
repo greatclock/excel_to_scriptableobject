@@ -4,7 +4,7 @@
 
 ## Import package into Unity project using Git repository
 
-**Note: ** Using Git repository is not the only way to import this package into your project. You can also download the code and dlls into your project, or import the package from your remote npm where this package is deployed.
+**Note :** Using Git repository is not the only way to import this package into your project. You can also download the code and dlls into your project, or import the package from your remote npm where this package is deployed.
 
 **Option 1 (all versions of Unity that supports Package Manager is OK) :**
 
@@ -97,7 +97,7 @@ It aimed to show how basic data types, enum types, arrays and nested types are u
 
 #### 3.2 Logical Rich-Text feature
 
-**Note : ** Logical Rich-Text means : one or more segment of a string may be replaced with contents only of value at the time that the string shows. For example : player's nick name, player's current level. It's NOT used for dealing with text colors, sizes or in-text images.
+**Note :** Logical Rich-Text means : one or more segment of a string may be replaced with contents only of value at the time that the string shows. For example : player's nick name, player's current level. It's NOT used for dealing with text colors, sizes or in-text images.
 
 [Guide3E2_EN.md](./Guide3E2_EN.md)
 
