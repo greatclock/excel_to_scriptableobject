@@ -899,9 +899,9 @@ namespace GreatClock.Common.ExcelToSO {
 							content.AppendLine(string.Format("{0}\t}}", indent));
 							content.AppendLine();
 						}
-						content.AppendLine(string.Format("{0}}}", indent));
-						content.AppendLine();
 					}
+					content.AppendLine(string.Format("{0}}}", indent));
+					content.AppendLine();
 				}
 				if (!string.IsNullOrEmpty(excel.name_space)) {
 					content.AppendLine("}");
