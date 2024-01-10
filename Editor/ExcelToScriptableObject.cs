@@ -1,7 +1,9 @@
 ﻿using Excel;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
+using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -17,11 +19,19 @@ namespace GreatClock.Common.ExcelToSO {
 		private static Regex reg_color32 = new Regex(@"^[A-Fa-f0-9]{8}$");
 		private static Regex reg_color24 = new Regex(@"^[A-Fa-f0-9]{6}$");
 
-		[MenuItem("GreatClock/Excel To ScriptableObject")]
+		[MenuItem("GreatClock/Excel To ScriptableObject/Open Window")]
 		static void Excel2ScriptableObject() {
 			ExcelToScriptableObject window = GetWindow<ExcelToScriptableObject>("Process Excel");
 			window.minSize = new Vector2(540f, 320f);
 			window.maxSize = new Vector2(4000f, 4000f);
+		}
+
+		[MenuItem("GreatClock/Excel To ScriptableObject/Process All")]
+		public static void ProcessAll() {
+			ReadsSettings();
+			for (int i = 0, imax = excel_settings.Count; i < imax; i++) {
+				Process(excel_settings[i], false);
+			}
 		}
 
 		private class SheetData {
@@ -164,10 +174,14 @@ namespace GreatClock.Common.ExcelToSO {
 							string enumValue = field.fieldIndex < enumObjs.Length ? enumObjs[field.fieldIndex].ToString() : null;
 							if (fieldType == eFieldTypes.UnknownList) {
 								foreach (string ev in GetStringsFromString(enumValue)) {
+									string tev = ev.Trim();
+									if (string.IsNullOrEmpty(tev)) { continue; }
 									if (!unknowsTypeValues.Contains(ev)) { unknowsTypeValues.Add(ev); }
 								}
 							} else {
-								if (!unknowsTypeValues.Contains(enumValue)) { unknowsTypeValues.Add(enumValue); }
+								string tev = enumValue.Trim();
+								if (string.IsNullOrEmpty(tev)) { continue; }
+								if (!unknowsTypeValues.Contains(tev)) { unknowsTypeValues.Add(tev); }
 							}
 						}
 					}
@@ -359,14 +373,15 @@ namespace GreatClock.Common.ExcelToSO {
 					content.AppendLine(string.Format("{0}\tpublic enum {1} {{", indent, kv.Key));
 					content.Append(indent);
 					content.Append("\t\t");
+					bool firstEnum = true;
 					for (int i = 0, imax = kv.Value.Count; i < imax; i++) {
-						content.Append(kv.Value[i]);
-						if (i < imax - 1) {
-							content.Append(", ");
-						} else {
-							content.AppendLine();
-						}
+						string ev = kv.Value[i].Trim();
+						if (string.IsNullOrEmpty(ev)) { continue; }
+						if (!firstEnum) { content.Append(", "); }
+						firstEnum = false;
+						content.Append(ev);
 					}
+					content.AppendLine();
 					content.AppendLine(string.Format("{0}\t}}", indent));
 					content.AppendLine();
 				}
@@ -636,6 +651,7 @@ namespace GreatClock.Common.ExcelToSO {
 								fieldTypeNameScript = string.Concat(className, ".", field.fieldTypeName);
 								break;
 							case eFieldTypes.CustomType:
+							case eFieldTypes.ExternalEnum:
 								fieldTypeNameScript = field.fieldTypeName;
 								break;
 							case eFieldTypes.UnknownList:
@@ -922,14 +938,14 @@ namespace GreatClock.Common.ExcelToSO {
 					md5Calc = new MD5CryptoServiceProvider();
 					try {
 						using (FileStream fs = File.OpenRead(scriptPath)) {
-							fileMD5 = System.BitConverter.ToString(md5Calc.ComputeHash(fs));
+							fileMD5 = BitConverter.ToString(md5Calc.ComputeHash(fs));
 						}
-					} catch (System.Exception e) { Debug.LogException(e); }
+					} catch (Exception e) { Debug.LogException(e); }
 				}
 				byte[] bytes = Encoding.UTF8.GetBytes(content.ToString());
 				bool toWrite = true;
 				if (!string.IsNullOrEmpty(fileMD5)) {
-					if (System.BitConverter.ToString(md5Calc.ComputeHash(bytes)) == fileMD5) {
+					if (BitConverter.ToString(md5Calc.ComputeHash(bytes)) == fileMD5) {
 						toWrite = false;
 					}
 				}
@@ -1188,6 +1204,9 @@ namespace GreatClock.Common.ExcelToSO {
 												break;
 										}
 										break;
+									case eFieldTypes.ExternalEnum:
+										pField.enumValueIndex = GetExternalTypeEnumValue(field.fieldTypeName, value);
+										break;
 								}
 							}
 						}
@@ -1211,7 +1230,7 @@ namespace GreatClock.Common.ExcelToSO {
 							}
 						}
 					}
-				} catch (System.Exception e) {
+				} catch (Exception e) {
 					Debug.LogException(e);
 				}
 				EditorUtility.ClearProgressBar();
@@ -1304,9 +1323,9 @@ namespace GreatClock.Common.ExcelToSO {
 
 		private static bool GetColorUIntFromString(string str, out uint color) {
 			if (reg_color32.IsMatch(str)) {
-				color = System.Convert.ToUInt32(str, 16);
+				color = Convert.ToUInt32(str, 16);
 			} else if (reg_color24.IsMatch(str)) {
-				color = (System.Convert.ToUInt32(str, 16) << 8) | 0xffu;
+				color = (Convert.ToUInt32(str, 16) << 8) | 0xffu;
 			} else {
 				color = 0u;
 				return false;
@@ -1317,95 +1336,123 @@ namespace GreatClock.Common.ExcelToSO {
 		enum eFieldTypes {
 			Unknown, UnknownList, Bool, Int, Ints, Float, Floats, Long, Longs,
 			Vector2, Vector3, Vector4, Rect, Color, String, Strings,
-			Lang, Langs, Rich, Riches, CustomType, CustomTypeList
+			Lang, Langs, Rich, Riches, CustomType, CustomTypeList, ExternalEnum
+		}
+
+		static Dictionary<string, Type> s_external_enum_types = new Dictionary<string, Type>();
+
+		static Type GetExternalType(string typename) {
+			Type type;
+			if (s_external_enum_types.TryGetValue(typename, out type)) {
+				return type;
+			}
+			foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies()) {
+				type = Type.GetType(typename + "," + assembly.GetName().Name);
+				if (type != null && type.IsEnum) {
+					s_external_enum_types.Add(typename, type);
+					return type;
+				}
+			}
+			return null;
+		}
+
+		static int GetExternalTypeEnumValue(string typename, string value) {
+			Type type = GetExternalType(typename);
+			if (type == null) { return 0; }
+			try { return (int)Enum.Parse(type, value); } catch { }
+			return 0;
 		}
 
 		static eFieldTypes GetFieldType(string typename) {
+			if (string.IsNullOrEmpty(typename)) { return eFieldTypes.Unknown; }
 			eFieldTypes type = eFieldTypes.Unknown;
-			if (!string.IsNullOrEmpty(typename)) {
-				switch (typename.Trim().ToLower()) {
-					case "bool":
-						type = eFieldTypes.Bool;
-						break;
-					case "int":
-					case "int32":
-						type = eFieldTypes.Int;
-						break;
-					case "ints":
-					case "int[]":
-					case "[int]":
-					case "int32s":
-					case "int32[]":
-					case "[int32]":
-						type = eFieldTypes.Ints;
-						break;
-					case "float":
-						type = eFieldTypes.Float;
-						break;
-					case "floats":
-					case "float[]":
-					case "[float]":
-						type = eFieldTypes.Floats;
-						break;
-					case "long":
-					case "int64":
-						type = eFieldTypes.Long;
-						break;
-					case "longs":
-					case "long[]":
-					case "[long]":
-					case "int64s":
-					case "int64[]":
-					case "[int64]":
-						type = eFieldTypes.Longs;
-						break;
-					case "vector2":
-						type = eFieldTypes.Vector2;
-						break;
-					case "vector3":
-						type = eFieldTypes.Vector3;
-						break;
-					case "vector4":
-						type = eFieldTypes.Vector4;
-						break;
-					case "rect":
-					case "rectangle":
-						type = eFieldTypes.Rect;
-						break;
-					case "color":
-					case "colour":
-						type = eFieldTypes.Color;
-						break;
-					case "string":
-						type = eFieldTypes.String;
-						break;
-					case "strings":
-					case "string[]":
-					case "[string]":
-						type = eFieldTypes.Strings;
-						break;
-					case "lang":
-					case "language":
-						type = eFieldTypes.Lang;
-						break;
-					case "langs":
-					case "lang[]":
-					case "[lang]":
-					case "languages":
-					case "language[]":
-					case "[language]":
-						type = eFieldTypes.Langs;
-						break;
-					case "rich":
-						type = eFieldTypes.Rich;
-						break;
-					case "richs":
-					case "riches":
-					case "rich[]":
-					case "[rich]":
-						type = eFieldTypes.Riches;
-						break;
-				}
+			switch (typename.Trim().ToLower()) {
+				case "bool":
+					type = eFieldTypes.Bool;
+					break;
+				case "int":
+				case "int32":
+					type = eFieldTypes.Int;
+					break;
+				case "ints":
+				case "int[]":
+				case "[int]":
+				case "int32s":
+				case "int32[]":
+				case "[int32]":
+					type = eFieldTypes.Ints;
+					break;
+				case "float":
+					type = eFieldTypes.Float;
+					break;
+				case "floats":
+				case "float[]":
+				case "[float]":
+					type = eFieldTypes.Floats;
+					break;
+				case "long":
+				case "int64":
+					type = eFieldTypes.Long;
+					break;
+				case "longs":
+				case "long[]":
+				case "[long]":
+				case "int64s":
+				case "int64[]":
+				case "[int64]":
+					type = eFieldTypes.Longs;
+					break;
+				case "vector2":
+					type = eFieldTypes.Vector2;
+					break;
+				case "vector3":
+					type = eFieldTypes.Vector3;
+					break;
+				case "vector4":
+					type = eFieldTypes.Vector4;
+					break;
+				case "rect":
+				case "rectangle":
+					type = eFieldTypes.Rect;
+					break;
+				case "color":
+				case "colour":
+					type = eFieldTypes.Color;
+					break;
+				case "string":
+					type = eFieldTypes.String;
+					break;
+				case "strings":
+				case "string[]":
+				case "[string]":
+					type = eFieldTypes.Strings;
+					break;
+				case "lang":
+				case "language":
+					type = eFieldTypes.Lang;
+					break;
+				case "langs":
+				case "lang[]":
+				case "[lang]":
+				case "languages":
+				case "language[]":
+				case "[language]":
+					type = eFieldTypes.Langs;
+					break;
+				case "rich":
+					type = eFieldTypes.Rich;
+					break;
+				case "richs":
+				case "riches":
+				case "rich[]":
+				case "[rich]":
+					type = eFieldTypes.Riches;
+					break;
+				default:
+					if (GetExternalType(typename) != null) {
+						type = eFieldTypes.ExternalEnum;
+					}
+					break;
 			}
 			return type;
 		}
@@ -1493,7 +1540,7 @@ namespace GreatClock.Common.ExcelToSO {
 			if (!path.StartsWith("Assets/")) { return false; }
 			if (path.Contains("//")) { return false; }
 			char[] invalidChars = Path.GetInvalidPathChars();
-			string[] splits = path.Split(new char[] { '/' }, System.StringSplitOptions.RemoveEmptyEntries);
+			string[] splits = path.Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
 			for (int i = 0, imax = splits.Length; i < imax; i++) {
 				string dir = splits[i].Trim();
 				if (string.IsNullOrEmpty(dir)) { return false; }
@@ -1763,20 +1810,20 @@ namespace GreatClock.Common.ExcelToSO {
 
 	}
 
-	[System.Serializable]
+	[Serializable]
 	public class ExcelToScriptableObjectSettings {
 		public ExcelToScriptableObjectGlobalConfigs configs;
 		public ExcelToScriptableObjectSetting[] excels;
 	}
 
-	[System.Serializable]
+	[Serializable]
 	public class ExcelToScriptableObjectGlobalConfigs {
 		public int field_row = 0;
 		public int type_row = 1;
 		public int data_from_row = 2;
 	}
 
-	[System.Serializable]
+	[Serializable]
 	public class ExcelToScriptableObjectSetting {
 		public string excel_name;
 		public string script_directory = "Assets";
@@ -1788,11 +1835,11 @@ namespace GreatClock.Common.ExcelToSO {
 		public bool compress_color_into_int = true;
 		public bool treat_unknown_types_as_enum = false;
 		public bool generate_tostring_method = true;
-		[System.NonSerialized]
+		[NonSerialized]
 		public bool dir_manual_edit;
-		[System.NonSerialized]
+		[NonSerialized]
 		public int script_dir_index;
-		[System.NonSerialized]
+		[NonSerialized]
 		public int asset_dir_index;
 		public void UpdateDirIndices(string[] folders) {
 			script_dir_index = -1;

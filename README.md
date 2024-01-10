@@ -28,7 +28,7 @@ NO EXTRA API AT ALL. All you need to use will be in the generated codes。
 - The row number of field names, field types and datas start should keep the SAME between xlsx files in ONE unity project.
 - As to a specific xlsx file, the corresponding generated C-Sharp file, which represent data structure in the xlsx, its name space and other features could be modified independently.
 - The first column of a  valid sheet must represent id or key, in order to index the line, also the item. And its type can only be int, long or string.
-- It the data types are nested between sheets, the referenced sheet name, also type name, should be filled into the cell where type name lays. And the value of this field should be filled with the keys in referenced sheet.
+- If the data types are nested between sheets, the referenced sheet name, also type name, should be filled into the cell where type name lays. And the value of this field should be filled with the keys in referenced sheet.
 
 
 
@@ -176,9 +176,9 @@ Value Example :
 
 - [r,g,b] (format, recommended)
 
-- RRGGBBAA (format,recommended) e.g. FF000080(semi-transparent red), 808080FF(opaque gray)
+- RRGGBBAA (format, recommended) e.g. FF000080(semi-transparent red), 808080FF(opaque gray)
 
-- RRGGBB (format, NOT recommended, opaque color) e.g. FFFF00(yellow), 000000(black)
+- RRGGBB (format, recommended, opaque color) e.g. FFFF00(yellow), 000000(black)
 
 ### String
 
