@@ -2347,64 +2347,95 @@ namespace GreatClock.Common.ExcelToSO {
 			public int length;
 		}
 
-		static bool StringChangeOperations(string from, string to, IList<MatchSegment> matches, out int steps, out int breaks) {
-			int ignores = 0;
-			int best = int.MaxValue;
-			int bestIgnore = -1;
-			while (true) {
-				int _steps;
-				int _breaks;
-				if (!TryStringChangeOperations(from, to, ignores, null, out _steps, out _breaks)) {
-					break;
-				}
-				int score = _steps + _breaks;
-				if (score < best) { best = score; bestIgnore = ignores; }
-				ignores++;
-			}
-			if (bestIgnore < 0) { steps = 0; breaks = 0; return false; }
-			return TryStringChangeOperations(from, to, bestIgnore, matches, out steps, out breaks);
+		private class StringChangeState {
+			public int fi;
+			public int ti;
+			public int steps;
+			public int breaks;
+			public int matching;
+			public List<MatchSegment> matches = new List<MatchSegment>();
 		}
 
-		private static bool TryStringChangeOperations(string from, string to, int ignores, IList<MatchSegment> matches, out int steps, out int breaks) {
-			steps = 0;
-			breaks = 0;
+		private static Queue<StringChangeState> s_cached_match_states = new Queue<StringChangeState>(32);
+
+		private static Stack<StringChangeState> s_temp_match_states = new Stack<StringChangeState>(32);
+
+		static bool StringChangeOperations(string from, string to, IList<MatchSegment> segments, out int steps, out int breaks) {
 			int lenF = from.Length;
 			int lenT = to.Length;
-			int fi = 0;
-			int ti = 0;
-			int matching = -1;
-			while (fi < lenF && ti < lenT) {
-				bool match = from[fi] == to[ti];
-				if (match) {
-					if (ignores > 0) {
-						ignores--;
-						match = false;
+			StringChangeState st = s_cached_match_states.Count > 0 ? s_cached_match_states.Dequeue() : new StringChangeState();
+			st.fi = 0;
+			st.ti = 0;
+			st.steps = 0;
+			st.breaks = 0;
+			st.matching = -1;
+			st.matches.Clear();
+			s_temp_match_states.Push(st);
+			StringChangeState best = null;
+			while (s_temp_match_states.Count > 0) {
+				StringChangeState state = s_temp_match_states.Pop();
+				if (state.ti < lenT && state.fi < lenF) {
+					s_temp_match_states.Push(state);
+					if (from[state.fi] == to[state.ti]) {
+						st = s_cached_match_states.Count > 0 ? s_cached_match_states.Dequeue() : new StringChangeState();
+						st.fi = state.fi;
+						st.ti = state.ti;
+						st.steps = state.steps;
+						st.breaks = state.breaks;
+						st.matching = state.matching;
+						st.matches.Clear();
+						st.matches.AddRange(state.matches);
+						if (st.matching < 0) {
+							st.matching = st.ti;
+							if (st.ti > 0 && st.fi == 0) { st.breaks++; }
+						}
+						st.fi++;
+						st.ti++;
+						s_temp_match_states.Push(st);
 					}
-				}
-				if (match) {
-					if (matching < 0) {
-						matching = ti;
-						if (fi > 0) { breaks++; }
+					if (state.matching >= 0) {
+						state.matches.Add(new MatchSegment() { index = state.matching, length = state.ti - state.matching });
+						state.matching = -1;
+						state.breaks++;
+						state.breaks++;
 					}
-					fi++;
-					ti++;
+					state.ti++;
+					state.steps++;
 				} else {
-					if (matches != null && matching >= 0) {
-						matches.Add(new MatchSegment() { index = matching, length = ti - matching });
+					if (state.ti < lenT) {
+						state.steps += lenT - state.ti;
+						if (state.matching >= 0) { state.breaks++; }
 					}
-					ti++;
-					steps++;
-					matching = -1;
+					if (state.matching >= 0) {
+						state.matches.Add(new MatchSegment() { index = state.matching, length = state.ti - state.matching });
+					}
+					StringChangeState unused = state;
+					if (state.fi == lenF) {
+						if (best == null || state.steps + state.breaks < best.steps + best.breaks) {
+							unused = best;
+							best = state;
+						}
+					}
+					if (unused != null) {
+						unused.matches.Clear();
+						s_cached_match_states.Enqueue(unused);
+					}
+					continue;
 				}
 			}
-			if (matches != null && matching >= 0) {
-				matches.Add(new MatchSegment() { index = matching, length = ti - matching });
+			if (best != null) {
+				steps = best.steps;
+				breaks = best.breaks;
+				for (int i = 0, imax = best.matches.Count; i < imax; i++) {
+					segments.Add(best.matches[i]);
+				}
+				best.matches.Clear();
+				s_cached_match_states.Enqueue(best);
+				return true;
 			}
-			if (ti < lenT) {
-				steps += lenT - ti;
-				breaks++;
-			}
-			return fi == lenF;
+			steps = 0;
+			breaks = 0;
+			return false;
 		}
 
 		private static string HighlightMatches(string content, List<MatchSegment> matches) {
