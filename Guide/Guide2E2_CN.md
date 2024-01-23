@@ -15,25 +15,25 @@
 ## 操作流程
 
 1. 在StudentsData.xlsx表格文件新增一个名为GroupData的Sheet，并填充数据。
-
+   
    ![](./.images/img2.2-1.jpg)
 
-3. 回到Unity中并重新运行“Process Excel”。
+2. 回到Unity中并重新运行“Process Excel”。
 
-4. 在TestExcelToSO.cs的Start方法中删掉上例中的代码，并追加如下代码。
-
+3. 在TestExcelToSO.cs的Start方法中删掉上例中的代码，并追加如下代码。
+   
    ![读取group_id为199102的组数据](./.images/img2.2-2.jpg)
 
-5. 运行测试，并查看控制台输出。此时members为GroupMember[]数组类型。
-
+4. 运行测试，并查看控制台输出。此时members为GroupMember[]数组类型。
+   
    ![控制台输出，突出三个成及job属性](./.images/img2.2-3.jpg)
 
 5. 此时，已不再需要通过接口获取GroupMember列表，故可将获取GroupMember列表的接口进行隐藏。修改在StudentsData.xlsx表格文件中“{GroupMember}”Sheet的名称为“.{GroupMember}”。
-
+   
    ![](./.images/img2.2-4.jpg)
 
 6. 回到Unity中并重新运行“Process Excel”。
 
 7. 此时，生成的代码StudentsData.cs中，GetGroupMemberList方法将被定义为private。
-
+   
    ![](./.images/img2.2-5.jpg)

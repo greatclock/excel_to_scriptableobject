@@ -15,23 +15,23 @@
 ## 操作流程
 
 1. 在LanguageData.xlsx表格文件的Translation表中cn和en的类型从string改为rich，并在其内容中增加对GetAge的调用以获取年龄。
-
+   
    ![](./.images/img3.2-1.jpg)
 
 2. 回到Unity中重新对LanguageData运行“Process Excel”。
 
 3. 编辑TestExcelToSO.cs文件，新增string GetAge(int year, int month, int date)方法。
-
+   
    ![](./.images/img3.2-2.jpg)
 
 4. 创建StringEnricher对象，并为将GetAge注册到该对象中作为内容填充方法。
-
+   
    ![](./.images/img3.2-3.jpg)
 
 5. 为LanguageData的实例指定Enrich方法，此方法内部调用StringEnricher的实例实现内容填充。
-
+   
    ![](./.images/img3.2-4.jpg)
 
 6. 回到Unity中，运行TestExcelToSO.cs中的代码，在Console中查看结果。
-
+   
    ![](./.images/img3.2-5.jpg)
