@@ -1774,7 +1774,7 @@ namespace GreatClock.Common.ExcelToSO {
 				if (excelInvalid) { GUI.backgroundColor = Color.green; }
 				pos.x += pos.width;
 				pos.width = 40f;
-				if (GUI.Button(pos, "Select", EditorStyles.miniButton)) {
+				if (GUI.Button(pos, "Select", style_mini_button)) {
 					string p = EditorUtility.OpenFilePanel("Select Excel File", ".", "xlsx");
 					if (!string.IsNullOrEmpty(p)) {
 						string projPath = Application.dataPath;
@@ -1788,7 +1788,7 @@ namespace GreatClock.Common.ExcelToSO {
 				if (!excelInvalid) { GUI.backgroundColor = Color.green; }
 				EditorGUI.BeginDisabledGroup(excelInvalid);
 				pos.x += pos.width;
-				if (GUI.Button(pos, "Open", EditorStyles.miniButton)) {
+				if (GUI.Button(pos, "Open", style_mini_button)) {
 					if (evt.shift) {
 						string folder = Path.GetDirectoryName(mSetting.excel_name);
 						EditorUtility.OpenWithDefaultApp(folder);
@@ -1949,7 +1949,7 @@ namespace GreatClock.Common.ExcelToSO {
 				if (excelInvalid) { GUI.backgroundColor = Color.green; }
 				pos.x += pos.width;
 				pos.width = 40f;
-				if (GUI.Button(pos, "Select", EditorStyles.miniButton)) {
+				if (GUI.Button(pos, "Select", style_mini_button)) {
 					string p = EditorUtility.OpenFilePanel("Select Excel File", ".", "xlsx");
 					if (!string.IsNullOrEmpty(p)) {
 						string projPath = Application.dataPath;
@@ -1963,7 +1963,7 @@ namespace GreatClock.Common.ExcelToSO {
 				if (!excelInvalid) { GUI.backgroundColor = Color.green; }
 				EditorGUI.BeginDisabledGroup(excelInvalid);
 				pos.x += pos.width;
-				if (GUI.Button(pos, "Open", EditorStyles.miniButton)) {
+				if (GUI.Button(pos, "Open", style_mini_button)) {
 					if (evt.shift) {
 						string folder = Path.GetDirectoryName(slave.excel_name);
 						EditorUtility.OpenWithDefaultApp(folder);
@@ -2155,6 +2155,7 @@ namespace GreatClock.Common.ExcelToSO {
 		private static GUIStyle style_toolbar_search_text;
 		private static GUIStyle style_toolbar_search_cancel;
 		private static GUIStyle style_rich_text;
+		private static GUIStyle style_mini_button;
 
 		private static SortedList<int, int> s_temp_sort = new SortedList<int, int>();
 		private static List<MatchSegment> s_matches = new List<MatchSegment>();
@@ -2170,6 +2171,8 @@ namespace GreatClock.Common.ExcelToSO {
 				style_toolbar_search_text = "ToolbarSeachTextField";
 				style_toolbar_search_cancel = "ToolbarSeachCancelButton";
 				style_rich_text = new GUIStyle(EditorStyles.label);
+				style_mini_button = new GUIStyle(EditorStyles.miniButton);
+				style_mini_button.fontSize = 9;
 				style_rich_text.richText = true;
 			}
 			EditorGUI.BeginDisabledGroup(EditorApplication.isCompiling);
@@ -2242,8 +2245,9 @@ namespace GreatClock.Common.ExcelToSO {
 					wrap.DrawGUI(rect, false, false, mToProcess);
 				}
 			}
+			GUILayout.Space(2f);
 			EditorGUILayout.EndScrollView();
-			GUILayout.Space(4f);
+			GUILayout.FlexibleSpace();
 			EditorGUI.EndDisabledGroup();
 			if ((GUI.changed && !filterChanged) || mSettingsDirty) {
 				mSettingsDirty = false;
