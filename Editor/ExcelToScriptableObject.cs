@@ -2168,8 +2168,8 @@ namespace GreatClock.Common.ExcelToSO {
 		void OnGUI() {
 			if (!gui_inited) {
 				gui_inited = true;
-				style_toolbar_search_text = "ToolbarSeachTextField";
-				style_toolbar_search_cancel = "ToolbarSeachCancelButton";
+				style_toolbar_search_text = GUI.skin.FindStyle("ToolbarSearchTextField") ?? GUI.skin.FindStyle("ToolbarSeachTextField");
+				style_toolbar_search_cancel = GUI.skin.FindStyle("ToolbarSearchCancelButton") ?? GUI.skin.FindStyle("ToolbarSeachCancelButton");
 				style_rich_text = new GUIStyle(EditorStyles.label);
 				style_mini_button = new GUIStyle(EditorStyles.miniButton);
 				style_mini_button.fontSize = 9;
