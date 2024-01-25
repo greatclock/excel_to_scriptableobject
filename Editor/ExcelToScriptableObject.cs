@@ -1033,6 +1033,11 @@ namespace GreatClock.Common.ExcelToSO {
 			className = Path.GetFileNameWithoutExtension(excel_path);
 			hasLang = false;
 			hasRich = false;
+			if (!File.Exists(excel_path)) {
+				string msg = string.Format("Excel file '{0}' does not exist...", excel_path);
+				EditorUtility.DisplayDialog("Excel To ScriptableObject", msg, "OK");
+				return false;
+			}
 			if (!CheckClassName(className)) {
 				string msg = string.Format("Invalid excel file '{0}', because the name of the xlsx file should be a class name...", excel_path);
 				EditorUtility.DisplayDialog("Excel To ScriptableObject", msg, "OK");
