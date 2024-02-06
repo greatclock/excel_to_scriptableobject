@@ -161,23 +161,23 @@ namespace GreatClock.Common.ExcelToSO {
 			content.AppendLine();
 			List<int> customTypeIndices = new List<int>();
 			foreach (SheetData sheet in sheets) {
+				FieldData firstField = sheet.fields[0];
+				bool hashStringKey = firstField.fieldType == eFieldTypes.String && settings.use_hash_string;
 				content.AppendLine(string.Format("{0}\t{1}", indent, serializeAttribute));
 				content.AppendLine(string.Format("{0}\tprivate {1}[] _{1}Items;", indent, sheet.itemClassName));
 				if (settings.use_public_items_getter) {
 					content.AppendLine(string.Format("{0}\tpublic int Get{1}Items(List<{1}> items) {{", indent, sheet.itemClassName));
 					content.AppendLine(string.Format("{0}\t\tint len = _{1}Items.Length;", indent, sheet.itemClassName));
 					content.AppendLine(string.Format("{0}\t\tfor (int i = 0; i < len; i++) {{", indent));
-					content.AppendLine(string.Format("{0}\t\t\titems.Add(_{1}Items[i].Init(mVersion, DataGetterObject));",
-						indent, sheet.itemClassName));
+					content.AppendLine(string.Format("{0}\t\t\titems.Add(_{1}Items[i].Init(mVersion, DataGetterObject{2}));",
+						indent, sheet.itemClassName, hashStringKey ? ", false" : ""));
 					content.AppendLine(string.Format("{0}\t\t}}", indent));
 					content.AppendLine(string.Format("{0}\t\treturn len;", indent));
 					content.AppendLine(string.Format("{0}\t}}", indent));
 				}
 				content.AppendLine();
-				FieldData firstField = sheet.fields[0];
 				string idVarName = firstField.fieldName;
 				idVarName = idVarName.Substring(0, 1).ToLower() + idVarName.Substring(1, idVarName.Length - 1);
-				bool hashStringKey = firstField.fieldType == eFieldTypes.String && settings.use_hash_string;
 				if (sheet.keyToMultiValues) {
 					if (!sheet.internalData) {
 						content.AppendLine(string.Format("{0}\tpublic List<{1}> Get{1}List({2} {3}) {{", indent, sheet.itemClassName,
