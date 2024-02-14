@@ -448,21 +448,40 @@ namespace GreatClock.Common.ExcelToSO {
 						content.AppendLine(string.Format("{0}\t\t}}", indent));
 						content.AppendLine(string.Format("{0}\t}}", indent));
 					} else if (field.fieldType == eFieldTypes.Lang || field.fieldType == eFieldTypes.Rich) {
+						string keygetter = null;
 						if (settings.use_hash_string) {
 							content.AppendLine(string.Format("{0}\tprivate int _{1};", indent, capitalFieldName));
+							keygetter = string.Format("mGetter.strings[_{0}]", capitalFieldName);
 						} else {
 							content.AppendLine(string.Format("{0}\tprivate {1} _{2};", indent, fieldTypeNameScript, capitalFieldName));
+							keygetter = string.Format("_{0}", capitalFieldName);
 						}
 						content.AppendLine(string.Format("{0}\tprivate {1} _{2}_;", indent, fieldTypeNameScript, capitalFieldName));
-						content.AppendLine(string.Format("{0}\tpublic {1} {2} {{ get {{ return _{3}_; }} }}", indent, fieldTypeNameScript, field.fieldName, capitalFieldName));
+						content.AppendLine(string.Format("{0}\tpublic {1} {2} {{ get {{ if (_{3}_ == null) {{ _{3}_ = mGetter.{4}({5}); }} return _{3}_; }} }}",
+							indent, fieldTypeNameScript, field.fieldName, capitalFieldName, field.fieldType == eFieldTypes.Lang ? "Translate" : "Enrich", keygetter));
 					} else if (field.fieldType == eFieldTypes.Langs || field.fieldType == eFieldTypes.Riches) {
+						string keygetter = null;
 						if (settings.use_hash_string) {
 							content.AppendLine(string.Format("{0}\tprivate int[] _{1};", indent, capitalFieldName));
+							keygetter = string.Format("mGetter.strings[_{0}]", capitalFieldName);
 						} else {
 							content.AppendLine(string.Format("{0}\tprivate {1} _{2};", indent, fieldTypeNameScript, capitalFieldName));
+							keygetter = string.Format("_{0}", capitalFieldName);
 						}
 						content.AppendLine(string.Format("{0}\tprivate {1} _{2}_;", indent, fieldTypeNameScript, capitalFieldName));
-						content.AppendLine(string.Format("{0}\tpublic {1} {2} {{ get {{ return _{3}_; }} }}", indent, fieldTypeNameScript, field.fieldName, capitalFieldName));
+						content.AppendLine(string.Format("{0}\tpublic {1} {2} {{", indent, fieldTypeNameScript, field.fieldName));
+						content.AppendLine(string.Format("{0}\t\tget {{", indent));
+						content.AppendLine(string.Format("{0}\t\t\tif (_{1}_ == null) {{", indent, capitalFieldName));
+						content.AppendLine(string.Format("{0}\t\t\t\tlen = _{1}.Length;", indent, capitalFieldName));
+						content.AppendLine(string.Format("{0}\t\t\t\t_{1}_ = new string[len];", indent, capitalFieldName));
+						content.AppendLine(string.Format("{0}\t\t\t\tfor (int i = 0; i < len, i++) {{", indent));
+						content.AppendLine(string.Format("{0}\t\t\t\t\t_{1}_[i] = mGetter.{2}({3});",
+							indent, capitalFieldName, field.fieldType == eFieldTypes.Lang ? "Translate" : "Enrich", keygetter));
+						content.AppendLine(string.Format("{0}\t\t\t\t}}", indent));
+						content.AppendLine(string.Format("{0}\t\t\t}}", indent));
+						content.AppendLine(string.Format("{0}\t\t\treturn _{1}_;", indent, capitalFieldName));
+						content.AppendLine(string.Format("{0}\t\t}}", indent));
+						content.AppendLine(string.Format("{0}\t}}", indent));
 					} else if (field.fieldType == eFieldTypes.CustomType) {
 						string keyFlag = customTypes[field.fieldTypeName][0];
 						switch (keyFlag[0]) {
@@ -521,9 +540,13 @@ namespace GreatClock.Common.ExcelToSO {
 				bool hashStringKey = sheet.fields[0].fieldType == eFieldTypes.String && settings.use_hash_string;
 				content.AppendLine(string.Format("{0}\t[NonSerialized]", indent));
 				content.AppendLine(string.Format("{0}\tprivate int mVersion = 0;", indent));
+				content.AppendLine(string.Format("{0}\t[NonSerialized]", indent));
+				content.AppendLine(string.Format("{0}\tprivate {1}.IDataGetter mGetter;", indent, className));
+				content.AppendLine();
 				content.AppendLine(string.Format("{0}\tpublic {1} Init(int version, {2}.IDataGetter getter{3}) {{",
 					indent, sheet.itemClassName, className, hashStringKey ? ", bool keyOnly" : ""));
 				content.AppendLine(string.Format("{0}\t\tif (mVersion == version) {{ return this; }}", indent));
+				content.AppendLine(string.Format("{0}\t\tmGetter = getter;", indent));
 				bool firstField = true;
 				foreach (FieldData field in sheet.fields) {
 					string capitalFieldName = CapitalFirstChar(field.fieldName);
@@ -548,54 +571,18 @@ namespace GreatClock.Common.ExcelToSO {
 							}
 							break;
 						case eFieldTypes.Lang:
-							if (settings.use_hash_string) {
-								content.AppendLine(string.Format("{0}\t\t_{1}_ = getter.Translate(getter.strings[_{1}]);",
-									indent, capitalFieldName));
-							} else {
-								content.AppendLine(string.Format("{0}\t\t_{1}_ = getter.Translate(_{1});",
-									indent, capitalFieldName));
-							}
+							content.AppendLine(string.Format("{0}\t\t_{1}_ = null;", indent, capitalFieldName));
 							break;
 						case eFieldTypes.Langs:
-							content.AppendLine(string.Format("{0}\t\tint len{1} = _{1}.Length;",
+							content.AppendLine(string.Format("{0}\t\t_{1}_ = null;",
 								indent, capitalFieldName));
-							content.AppendLine(string.Format("{0}\t\t_{1}_ = new string[len{1}];",
-								indent, capitalFieldName));
-							content.AppendLine(string.Format("{0}\t\tfor (int i = 0; i < len{1}; i++) {{",
-								indent, capitalFieldName));
-							if (settings.use_hash_string) {
-								content.AppendLine(string.Format("{0}\t\t\t_{1}_[i] = getter.Translate(getter.strings[_{1}[i]]);",
-									indent, capitalFieldName, field.fieldTypeName));
-							} else {
-								content.AppendLine(string.Format("{0}\t\t\t_{1}_[i] = getter.Translate(_{1}[i]);",
-									indent, capitalFieldName, field.fieldTypeName));
-							}
-							content.AppendLine(string.Format("{0}\t\t}}", indent));
 							break;
 						case eFieldTypes.Rich:
-							if (settings.use_hash_string) {
-								content.AppendLine(string.Format("{0}\t\t_{1}_ = getter.Enrich(getter.strings[_{1}]);",
-									indent, capitalFieldName));
-							} else {
-								content.AppendLine(string.Format("{0}\t\t_{1}_ = getter.Enrich(_{1});",
-									indent, capitalFieldName));
-							}
+							content.AppendLine(string.Format("{0}\t\t_{1}_ = null;", indent, capitalFieldName));
 							break;
 						case eFieldTypes.Riches:
-							content.AppendLine(string.Format("{0}\t\tint len{1} = _{1}.Length;",
+							content.AppendLine(string.Format("{0}\t\t_{1}_ = null;",
 								indent, capitalFieldName));
-							content.AppendLine(string.Format("{0}\t\t_{1}_ = new string[len{1}];",
-								indent, capitalFieldName));
-							content.AppendLine(string.Format("{0}\t\tfor (int i = 0; i < len{1}; i++) {{",
-								indent, capitalFieldName));
-							if (settings.use_hash_string) {
-								content.AppendLine(string.Format("{0}\t\t\t_{1}_[i] = getter.Enrich(getter.strings[_{1}[i]]);",
-									indent, capitalFieldName, field.fieldTypeName));
-							} else {
-								content.AppendLine(string.Format("{0}\t\t\t_{1}_[i] = getter.Enrich(_{1}[i]);",
-									indent, capitalFieldName, field.fieldTypeName));
-							}
-							content.AppendLine(string.Format("{0}\t\t}}", indent));
 							break;
 						case eFieldTypes.CustomType:
 							if (customTypes[field.fieldTypeName][0].Length > 1) {
@@ -2180,6 +2167,17 @@ namespace GreatClock.Common.ExcelToSO {
 				style_mini_button.fontSize = 9;
 				style_rich_text.richText = true;
 			}
+			Event evt = Event.current;
+			if (evt.type == EventType.KeyDown && evt.keyCode == KeyCode.F &&
+#if UNITY_EDITOR_OSX
+				evt.command &&
+#else
+				evt.control &&
+#endif
+				!evt.shift && !evt.alt) {
+				evt.Use();
+				EditorGUI.FocusTextInControl("SearchInput");
+			}
 			EditorGUI.BeginDisabledGroup(EditorApplication.isCompiling);
 			GUILayout.Space(4f);
 			EditorGUILayout.BeginHorizontal(GUILayout.MinHeight(10f));
@@ -2224,6 +2222,7 @@ namespace GreatClock.Common.ExcelToSO {
 			EditorGUILayout.BeginHorizontal();
 			EditorGUILayout.LabelField("Excel Settings :");
 			bool filterChanged = false;
+			GUI.SetNextControlName("SearchInput");
 			string filter = GUILayout.TextField(mFilter, style_toolbar_search_text, GUILayout.Width(200f));
 			if (GUILayout.Button(GUIContent.none, style_toolbar_search_cancel)) {
 				filter = "";
