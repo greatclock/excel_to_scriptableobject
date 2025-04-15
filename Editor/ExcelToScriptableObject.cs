@@ -981,7 +981,7 @@ namespace GreatClock.Common.ExcelToSO {
 									}
 									break;
 								case eFieldTypes.ExternalEnum:
-									pField.enumValueIndex = GetExternalTypeEnumValue(field.fieldTypeName, value);
+									pField.enumValueIndex = GetExternalTypeEnumIndex(field.fieldTypeName, value);
 									break;
 							}
 						}
@@ -1423,10 +1423,13 @@ namespace GreatClock.Common.ExcelToSO {
 			return null;
 		}
 
-		static int GetExternalTypeEnumValue(string typename, string value) {
+		static int GetExternalTypeEnumIndex(string typename, string value) {
 			Type type = GetExternalType(typename);
-			if (type == null) { return 0; }
-			try { return (int)Enum.Parse(type, value); } catch { }
+			if (type == null || !type.IsEnum) { return 0; }
+			string[] names = Enum.GetNames(type);
+			for (int i = 0; i < names.Length; i++) {
+				if (names[i] == value) { return i; }
+			}
 			return 0;
 		}
 
